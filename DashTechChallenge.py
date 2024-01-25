@@ -25,6 +25,7 @@ df = df.rename(columns={df.columns[0]: 'Data', df.columns[1]: 'Preço'})
 
 # Tratamento dos dados
 df['Preço'] = df['Preço'] / 100
+df['Preço']= pd.to_numeric(df['Preço'], errors='coerce')
 df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y')
 df_media_ano = df.groupby(df['Data'].dt.year)['Preço'].mean().reset_index()
 
@@ -35,10 +36,9 @@ fig_media_preco_ano = px.line(df_media_ano, x='Data', y='Preço', markers=True,
 
 # Dados dos últimos 24 meses
 data_atual = df['Data'].max()
-ultimos_24_meses = pd.date_range(end=data_atual, periods=24, freq='M')
-df_ultimos_24_meses = df[df['Data'].isin(ultimos_24_meses)]
+data_24_meses_atras = data_atual - pd.DateOffset(months=24)
+df_ultimos_24_meses = df[(df['Data'] >= data_24_meses_atras) & (df['Data'] <= data_atual)]
 df_ultimos_24_meses['MesAno'] = df_ultimos_24_meses['Data'].dt.to_period('M').dt.strftime('%m-%Y')
-df_ultimos_24_meses['Preço'] = pd.to_numeric(df_ultimos_24_meses['Preço'], errors='coerce')
 df_media_ultimos_24_meses = df_ultimos_24_meses.groupby('MesAno')['Preço'].mean().reset_index()
 df_media_ultimos_24_meses['MesAno'] = pd.to_datetime(df_media_ultimos_24_meses['MesAno'], format='%m-%Y')
 df_media_ultimos_24_meses = df_media_ultimos_24_meses.sort_values('MesAno')
@@ -49,6 +49,7 @@ fig_media_ultimos_24_meses = px.line(df_media_ultimos_24_meses, x='MesAno', y='P
                                     title='Média de preço por mês dos últimos 24 Meses', labels={'Preço': 'Média de Preço', 'MesAno': 'Mês-Ano'}, 
                                     template='plotly_dark')
 
+#
 # Visualização no Streamlit em abas
 aba1, aba2, aba3 = st.tabs(['Valores Petróleo', 'Previsão de Valores', 'Dados'])
 with aba1:
