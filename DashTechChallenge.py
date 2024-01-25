@@ -7,16 +7,6 @@ import plotly.express as px
 # Configuração da página Streamlit
 st.set_page_config(layout='wide')
 
-# Configuração do tema para modo escuro (dark mode)
-st.markdown("""
-    <style>
-    body {
-        color: white;
-        background-color: #222831;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 # Título do aplicativo
 st.title('Análise de Preço do Petróleo Brent :oil_drum:')
 
