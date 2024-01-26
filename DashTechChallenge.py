@@ -53,9 +53,9 @@ fig_media_ultimos_24_meses = px.line(df_media_ultimos_24_meses, x='MesAno', y='P
 # Visualização no Streamlit em abas
 aba1, aba2, aba3, aba4 = st.tabs(['Valores Petróleo', 'Previsão de Valores', 'Insights', 'Dados'])
 with aba1:
-    st.write('''O petróleo Brent foi batizado assim porque era extraído de uma base da Shell chamada Brent. Atualmente, a palavra Brent designa todo o petróleo extraído no Mar do Norte e comercializado na Bolsa de Londres.
-    A cotação Brent é o valor de referência mundial.
-    ''')
+    st.write('''A palavra Brent designa todo o petróleo extraído no Mar do Norte e comercializado na Bolsa de Londres.''')
+    st.write('''A cotação Brent é o valor de referência mundial.''')
+
     st.markdown('O preço do petróleo Brent pode ser influenciado por alguns fatores, como:')
     st.markdown("- Níveis de produção de petróleo bruto;")
     st.markdown("- Balanço de oferta e demanda;")
