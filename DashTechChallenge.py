@@ -31,10 +31,10 @@ df['Preço']= pd.to_numeric(df['Preço'], errors='coerce')
 df['Data'] = pd.to_datetime(df['Data'], format='%d/%m/%Y')
 df_media_ano = df.groupby(df['Data'].dt.year)['Preço'].mean().reset_index()
 
-# Gráfico de linha da média de preço por ano
-fig_media_preco_ano = px.line(df_media_ano, x='Data', y='Preço', markers=True,
-                          title='Média de preço por ano', labels={'Preço': 'Média de Preço', 'Data': 'Ano'},
-                          template='plotly_dark')
+# Adicionando filtro por ano
+anos = sorted(df_media_ano['Data'].unique())
+ano_inicio_pr = min(anos)
+ano_fim_pr = max(anos)
 
 # Dados dos últimos 24 meses
 data_atual = df['Data'].max()
@@ -46,14 +46,19 @@ df_media_ultimos_24_meses['MesAno'] = pd.to_datetime(df_media_ultimos_24_meses['
 df_media_ultimos_24_meses = df_media_ultimos_24_meses.sort_values('MesAno')
 df_media_ultimos_24_meses['MesAno'] = df_media_ultimos_24_meses['MesAno'].dt.strftime('%m-%Y')
 
-# Gráfico de linha da média de preço nos últimos 24 meses
-fig_media_ultimos_24_meses = px.line(df_media_ultimos_24_meses, x='MesAno', y='Preço', markers=True,
-                                    title='Média de preço por mês dos últimos 24 Meses', labels={'Preço': 'Média de Preço', 'MesAno': 'Mês-Ano'},
-                                    template='plotly_dark')
+# Adicionando filtro por dat
+datas = sorted(df_media_ultimos_24_meses['MesAno'].unique())
 
-#
+def chave_de_ordenacao(item):
+    partes = item.split('-')
+    return int(partes[1]), int(partes[0])  # Ordena primeiro pelo ano e depois pelo mês
+
+datas = sorted(datas, key=chave_de_ordenacao)
+data_inicio_pr = min(datas, key=chave_de_ordenacao)
+data_fim_pr = max(datas, key=chave_de_ordenacao)
+
 # Visualização no Streamlit em abas
-aba1, aba2, aba3, aba4 = st.tabs(['Valores Petróleo', 'Previsão de Valores', 'Insights', 'Dados'])
+aba1, aba2, aba3, aba4 = st.tabs(['Valores Petróleo', 'Previsão de Valores', 'Insights', 'Dados - IPEA'])
 with aba1:
     st.write('''A palavra Brent designa todo o petróleo extraído no Mar do Norte e comercializado na Bolsa de Londres.''')
     st.write('''A cotação Brent é o valor de referência mundial.''')
@@ -64,7 +69,22 @@ with aba1:
     st.markdown("- Operações de petróleo bruto no Mar do Norte;")
     st.markdown("- Questões geopolíticas no mercado internacional.")
 
+    st.subheader('Média de preço por ano')
+    col1, col2 = st.columns(2)
+    with col1:
+        ano_inicio = st.selectbox("Ano de início:", anos, index=anos.index(ano_inicio_pr))
+
+    with col2:
+        ano_fim = st.selectbox("Ano de término:", anos, index=anos.index(ano_fim_pr))
+
+    df_media_ano_filtrado = df_media_ano[(df_media_ano['Data'] >= ano_inicio) & (df_media_ano['Data'] <= ano_fim)] 
+
+    fig_media_preco_ano = px.line(df_media_ano_filtrado, x='Data', y='Preço', markers=True,
+                          title='', labels={'Preço': 'Média de Preço', 'Data': 'Ano'},
+                          template='plotly_dark')
+        
     st.plotly_chart(fig_media_preco_ano, use_container_width=True)
+
     st.write('''Os choques geopolíticos podem ter impacto nos preços do petróleo através de uma atividade económica mais baixa ou de riscos mais elevados para a oferta de matérias-primas.''')
     st.markdown('- O preço do petróleo Brent aumentou na época em que a primavera Árabe começou no Egito em fevereiro de 2011, os temores sobre o fechamento do Canal de Suez e a falta de oferta disponível fizeram com que o petróleo bruto ficasse mais caro.')
     st.markdown('- No final de 2011, o governo iraniano ameaçou fechar o Estreito de Ormuz, por onde fluia cerca de 20% do petróleo mundial, aumentando o preço do petróleo.')
@@ -72,8 +92,25 @@ with aba1:
     st.markdown('- Em 2015 foi firmado um acordo com o Irã, permitindo ao país exportar mais petróleo, o que deveria ter aumentado a quantidade de petróleo bruto que entra no mercado diariamente. Como a Brent é a referência de preço do petróleo iraniano, esse desenvolvimento fez o preço do Brent cair.')
     st.markdown('- Em 2020, em virtude da pandemia da Covid-19, os preços do marcador Brent registraram o menor valor desde 2004. Em maio de 2020, durante a pandemia e o confinamento global, a previsão do preço do petróleo Brent caiu para 28 dólares por barril, uma queda de mais de 5%.')
 
+    st.subheader('Média de preço por mês dos últimos 24 Meses')
+
+    col1, col2 = st.columns(2)
+    with col1:
+        data_inicio = st.selectbox("Mes-Ano de início:", datas, index=datas.index(data_inicio_pr))
+
+    with col2:
+        data_fim = st.selectbox("Mes-Ano de término:", datas, index=datas.index(data_fim_pr))
+
+    df_media_ultimos_24_meses['MesAno'] = pd.to_datetime(df_media_ultimos_24_meses['MesAno'], format='%m-%Y')
+
+    df_media_ultimos_24_meses_filtrado = df_media_ultimos_24_meses[(df_media_ultimos_24_meses['MesAno'] >= data_inicio) & (df_media_ultimos_24_meses['MesAno'] <= data_fim)] 
+
+    fig_media_ultimos_24_meses = px.line(df_media_ultimos_24_meses_filtrado, x='MesAno', y='Preço', markers=True,
+                                    title='', labels={'Preço': 'Média de Preço', 'MesAno': 'Mês-Ano'},
+                                    template='plotly_dark')
 
     st.plotly_chart(fig_media_ultimos_24_meses, use_container_width=True)
+
     st.markdown('- Em junho de 2022, com o alívio das restrições contra a Covid-19 nas maiores cidades da China, o preço do petróleo Brent subiu para o nível mais alto dos últimos meses - período em que Xangai ficou em lockdown.')
     st.markdown('- Em setembro de 2022, a queda se deve ao temor dos investidores com o desaquecimento da economia global, principalmente da China, o que freia a demanda pela commodity. Os dados de exportações do país asiático mostraram que o crescimento das vendas foi mais impactado em agosto do que o mercado financeiro esperava. As importações, por sua vez, estagnaram. A China adotou medidas para restringir o fluxo de pessoas por causa da pandemia de covid-19.')
     st.markdown('- No final de 2023, dois principais fatores externos contribuíram para que os preços dos combustíveis tivessem uma tendência de queda no cenário internacional, segundo o superintendente de pesquisa da FGV Energia, Márcio Couto. Um deles é a conjuntura econômica, com os Estados Unidos subindo taxas de juros para conter a inflação americana por meio da desaceleração da economia. Soma-se a isso desconfianças sobre a força do crescimento da China, segunda maior economia global.  Outro elemento externo é um reflexo da guerra na Ucrânia. Como forma de pressionar a Rússia a parar o conflito, a União Europeia e o G7 (grupo dos sete países mais desenvolvidos do mundo) aplicaram embargos à compra do petróleo russo.  Com isso, a Rússia ficou com muito petróleo e derivados sobrando e está colocando esses produtos no mercado por um preço muito baixo. Você passou a ter um combustível barato.')
@@ -112,7 +149,32 @@ with aba3:
     st.divider()
     st.write(":bulb: **Outro fator é a valorização do dólar internacionalmente, fazendo com que o preço do combustível fique encarecido pelo câmbio, o que reduz a demanda.**")
 
-
 with aba4:
-    st.dataframe(df)
+
+    df_ordenado = df.sort_values('Data')
+    ultimo_preco = df_ordenado['Preço'].iloc[-1]
+    preco_medio = round(df_ordenado['Preço'].mean(), 2)
+    preco_minimo = df_ordenado['Preço'].min()
+    preco_maximo = df_ordenado['Preço'].max()
+    anos_disponiveis = sorted(df['Data'].dt.year.unique())
+    ano_inicio_padrao = min(anos_disponiveis)
+    ano_fim_padrao = max(anos_disponiveis)
+    
+    # Dividindo a tela em duas colunas
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(label="Último Preço Informado:", value=ultimo_preco)
+        st.metric(label="Preço Médio:", value=preco_medio)
+        ano_inicio = st.selectbox("Selecione o ano de início:", anos_disponiveis, index=anos_disponiveis.index(ano_inicio_padrao))
+
+    with col2:
+        st.metric(label="Preço Mínimo:", value=preco_minimo)
+        st.metric(label="Preço Máximo:", value=preco_maximo)
+        ano_fim = st.selectbox("Selecione o ano de término:", anos_disponiveis, index=anos_disponiveis.index(ano_fim_padrao))
+        
+    df_filtrado = df[(df['Data'].dt.year >= ano_inicio) & (df['Data'].dt.year <= ano_fim)]
+    
+    # DataFrame IPEA
+    st.dataframe(df_filtrado)
     st.write('Fonte: http://www.ipeadata.gov.br/ExibeSerie.aspx?module=m&serid=1650971490&oper=view')
