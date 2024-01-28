@@ -3,6 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import plotly.express as px
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from datetime import date, timedelta
 
 # Configuração da página Streamlit
 st.set_page_config(layout='wide')
@@ -77,7 +79,29 @@ with aba1:
     st.markdown('- No final de 2023, dois principais fatores externos contribuíram para que os preços dos combustíveis tivessem uma tendência de queda no cenário internacional, segundo o superintendente de pesquisa da FGV Energia, Márcio Couto. Um deles é a conjuntura econômica, com os Estados Unidos subindo taxas de juros para conter a inflação americana por meio da desaceleração da economia. Soma-se a isso desconfianças sobre a força do crescimento da China, segunda maior economia global.  Outro elemento externo é um reflexo da guerra na Ucrânia. Como forma de pressionar a Rússia a parar o conflito, a União Europeia e o G7 (grupo dos sete países mais desenvolvidos do mundo) aplicaram embargos à compra do petróleo russo.  Com isso, a Rússia ficou com muito petróleo e derivados sobrando e está colocando esses produtos no mercado por um preço muito baixo. Você passou a ter um combustível barato.')
 
 with aba2:
-    st.write("**Machine Learning**")
+    st.write('''Utilizando as técnicas de Machine Learning, foi possível com o modelo Sarima, prever o preço do petróleo Brent para os próximos 10 dias.''')
+    data_final=df.reset_index().iloc[0].Data
+    data_inicial=data_final - timedelta(days=90)
+    treino_3meses = df.loc[(df['Data'] >= data_inicial)]
+    treino_3meses = treino_3meses.set_index('Data').asfreq('D')
+
+    model_sarimax = SARIMAX(treino_3meses['Preço'], freq='D', order=(7,1,2), seasonal_order=(0,1,1,7))
+    model_fit = model_sarimax.fit()
+    predict_sarimax = model_fit.predict(start=91,end=100,dynamic=True)
+    predict_sarimax_new = predict_sarimax.reset_index().rename(columns={'index': 'Data', 'predicted_mean': 'Preço predição'})
+    
+    ultimo_mes=df.loc[(df['Data'] >= data_final - timedelta(days=30))]
+    
+    glue = pd.DataFrame(data=[{'Data': data_final, 'Preço predição': ultimo_mes.iloc[0]['Preço']}])
+
+    base_predicao_mais_3_meses = pd.concat([ultimo_mes, glue, predict_sarimax_new])
+
+    fig_previsao = px.line(base_predicao_mais_3_meses, x='Data', y=['Preço', 'Preço predição'], markers=True,
+                                    title='Previsão do preço do petróleo Brent', labels={'Preço': 'Média de Preço', 'Data': 'Data'},
+                                    template='plotly_dark')
+
+    st.plotly_chart(fig_previsao, use_container_width=True)
+
 with aba3:
     st.write(":bulb: **Guerras ou instabilidade política em uma parte sensível do mundo podem afertar o trabalho dos produtores de petróleo na área. Além disto, o aumento ou redução de petróleo pela OPEP pode afetar o preço.**")
     st.divider()
