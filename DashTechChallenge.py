@@ -79,7 +79,8 @@ with aba1:
     st.markdown('- No final de 2023, dois principais fatores externos contribuíram para que os preços dos combustíveis tivessem uma tendência de queda no cenário internacional, segundo o superintendente de pesquisa da FGV Energia, Márcio Couto. Um deles é a conjuntura econômica, com os Estados Unidos subindo taxas de juros para conter a inflação americana por meio da desaceleração da economia. Soma-se a isso desconfianças sobre a força do crescimento da China, segunda maior economia global.  Outro elemento externo é um reflexo da guerra na Ucrânia. Como forma de pressionar a Rússia a parar o conflito, a União Europeia e o G7 (grupo dos sete países mais desenvolvidos do mundo) aplicaram embargos à compra do petróleo russo.  Com isso, a Rússia ficou com muito petróleo e derivados sobrando e está colocando esses produtos no mercado por um preço muito baixo. Você passou a ter um combustível barato.')
 
 with aba2:
-    st.write('''Utilizando as técnicas de Machine Learning, foi possível com o modelo Sarima, prever o preço do petróleo Brent para os próximos 10 dias.''')
+    st.write('''Utilizando as técnicas de Machine Learning e adotando o período de treinamento dos últimos 90 dias da base do Ipea, foi possível realizar uma predição do preço do petróleo para os próximos 10 dias. O modelo que apresentou os melhores índices para o estudo foi o Sarima e está representado em vermelho no gráfico abaixo, onde está sendo comparado os valores dos úlimos 30 dias e a predição dos próximos 10 dias.''')
+    st.write('''O modelo prevê uma constância no valor do petróleo, entretanto, vale ressaltar que fatores geopolíticos globais influenciam fortemente no preço do Brent e estes são, muitas vezes, imprevisíveis.''')
     data_final=df.reset_index().iloc[0].Data
     data_inicial=data_final - timedelta(days=90)
     treino_3meses = df.loc[(df['Data'] >= data_inicial)]
@@ -99,7 +100,7 @@ with aba2:
     fig_previsao = px.line(base_predicao_mais_3_meses, x='Data', y=['Preço', 'Preço predição'], markers=True,
                                     title='Previsão do preço do petróleo Brent', labels={'Preço': 'Média de Preço', 'Data': 'Data'},
                                     template='plotly_dark')
-
+    fig_previsao.update_layout(title='Previsão do preço do petróleo Brent', xaxis_title="Data", yaxis_title="Preço", legend_title="Legenda")
     st.plotly_chart(fig_previsao, use_container_width=True)
 
 with aba3:
@@ -114,3 +115,4 @@ with aba3:
 
 with aba4:
     st.dataframe(df)
+    st.write('Fonte: http://www.ipeadata.gov.br/ExibeSerie.aspx?module=m&serid=1650971490&oper=view')
